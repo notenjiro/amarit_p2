@@ -1,0 +1,18 @@
+<?php
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+$contract_no = $_GET['contract_no'];
+
+$fQuery = "SELECT  a.*,b.description as vehicle_group, a.transportation_from as from_location, a.transportation_to as to_location FROM contract_transportation_rate a left join vehicle_type b on b.code = a.vehicle_type WHERE contract_no = '$contract_no'";
+$result = sqlsrv_query($conn, $fQuery);
+$raw['data'] = array();
+
+while($row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC)){
+    $data = [$row['reccode'], $row['contract_line'], $row['vehicle_group'], $row['diesel_baht_from'], $row['diesel_baht_to'], $row['from_location'], $row['to_location'], $row['transportation_rate'], $row['total_km'], bit_value($row['transport_solution']), $row['uom'], $row['category'], $row['reccode'], $row['backhual'], $row['vehicle_type'], $row['transportation_from'], $row['transportation_to'], $row['round_trip_rate']];
+    array_push($raw['data'],$data);
+}
+
+echo json_encode($raw);
+sqlsrv_close($conn);
+?>

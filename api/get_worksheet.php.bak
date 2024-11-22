@@ -1,0 +1,49 @@
+<?php
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+$worksheet_id = $_GET['worksheet_id'];
+
+$fQuery = "SELECT * FROM worksheet WHERE worksheet_id = '$worksheet_id'";
+
+$result = sqlsrv_query($conn, $fQuery);
+$row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC);
+
+$raw['worksheet_id'] = $row['worksheet_id'];
+$raw['branch'] = $row['branch'];
+$raw['worksheet_date'] = date_format($row['worksheet_date'],'Y-m-d');
+$raw['subject'] = $row['subject'];
+$raw['customer'] = $row['customer'];
+$raw['customer_ref'] = $row['customer_ref'];
+$raw['contact'] = $row['contract'];
+$raw['worksheet_status'] = $row['worksheet_status'];
+
+$raw['send_date'] = is_null($row['send_date'])?"":date_format($row['send_date'],'Y-m-d');
+$raw['send_time'] = is_null($row['send_time'])?"":date_format($row['send_time'],'H:i');
+$raw['rcvd_date'] = is_null($row['rcvd_date'])?"":date_format($row['rcvd_date'],'Y-m-d');
+$raw['rcvd_time'] = is_null($row['rcvd_time'])?"":date_format($row['rcvd_time'],'H:i');
+$raw['close_date'] = is_null($row['close_date'])?"":date_format($row['close_date'],'Y-m-d');
+$raw['close_time'] = is_null($row['close_time'])?"":date_format($row['close_time'],'H:i');
+$raw['cancel_reason'] = $row['cancel_reason'];
+$raw['remark'] = $row['remark'];
+$raw['ref1'] = $row['ref1'];
+$raw['ref2'] = $row['ref2'];
+$raw['ref3'] = $row['ref3'];
+$raw['ref4'] = $row['ref4'];
+$raw['ref5'] = $row['ref5'];
+$raw['ref6'] = $row['ref6'];
+
+$raw['request_method'] = $row['request_method'];
+$raw['request_to'] = $row['request_to'];
+$raw['client_inform_amarit_date'] = is_null($row['client_inform_amarit_date'])?"":date_format($row['client_inform_amarit_date'],'Y-m-d');
+$raw['client_inform_amarit_time'] = is_null($row['client_inform_amarit_time'])?"":date_format($row['client_inform_amarit_time'],'H:i');
+$raw['cs_inform_opr_date'] = is_null($row['cs_inform_opr_date'])?"":date_format($row['cs_inform_opr_date'],'Y-m-d');
+$raw['cs_inform_opr_time'] = is_null($row['cs_inform_opr_time'])?"":date_format($row['cs_inform_opr_time'],'H:i');
+$raw['opr_inform_cs_date'] = is_null($row['opr_inform_cs_date'])?"":date_format($row['opr_inform_cs_date'],'Y-m-d');
+$raw['opr_inform_cs_time'] = is_null($row['opr_inform_cs_time'])?"":date_format($row['opr_inform_cs_time'],'H:i');
+$raw['cs_inform_client_date'] = is_null($row['cs_inform_client_date'])?"":date_format($row['cs_inform_client_date'],'Y-m-d');
+$raw['cs_inform_client_time'] = is_null($row['cs_inform_client_time'])?"":date_format($row['cs_inform_client_time'],'H:i');
+
+echo json_encode($raw);
+sqlsrv_close($conn);
+?>

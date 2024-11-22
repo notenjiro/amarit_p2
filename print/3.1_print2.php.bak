@@ -1,0 +1,1669 @@
+<?php 
+    ini_set('display_errors', 'Off');
+    define('FPDF_FONTPATH','font/');
+    require('fpdf182/fpdf.php');	
+
+    require_once '../config_db.php';
+    require_once '../utils/helper.php';
+	require_once '../vendor/autoload.php';
+
+	use Intervention\Image\ImageManager;  
+  
+	$manager = new ImageManager();   
+
+    $GLOBALS["worksheet_id"] = $_GET['worksheet_id'];
+    $worksheet_id = $_GET['worksheet_id'];
+	$iquery = "SELECT *, a.remark as remark, b.name as customer_name,b.erp_id, u.name as user_name from worksheet a join customer b on a.customer = b.customer_id join subject c on a.subject = c.code left join users u on u.user_name = a.user_id  WHERE worksheet_id = '$worksheet_id' ";
+	$stmt = sqlsrv_query($conn, $iquery); 
+
+	$row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC);
+	$GLOBALS["worksheet_date"] = $row["worksheet_date"];
+	$GLOBALS["contract"] = $row["contract"];
+	$GLOBALS["customer_name"] = $row["customer_name"];
+	$GLOBALS["address"] = $row["address"];
+	$GLOBALS["address2"] = $row["address2"];
+	$GLOBALS["province"] = $row["province"];
+	$GLOBALS["postcode"] = $row["postcode"];
+	$GLOBALS["tel"] = $row["tel"];
+	$GLOBALS["description"] = $row["description"];
+	$GLOBALS["remark"] = $row["remark"];
+	$GLOBALS["branch"] = $row["branch"];
+	$GLOBALS["user_name"] = $row["user_name"];
+	$GLOBALS["manager_name"] = $row["manager_name"];
+	$GLOBALS["customer_id"] = $row["erp_id"];
+	$GLOBALS["customer_ref"] = $row["customer_ref"];
+
+	$path_barcode = "../images/picbarcode/";		
+	$file_barcode = $_GET['worksheet_id'].".png";
+    $full_savePath = $path_barcode.$file_barcode;
+
+	$img = $manager->make('http://localhost:8181/gen_barcode.php?code='.$_GET['worksheet_id'])->save('../images/picbarcode/'.$_GET['worksheet_id'].'.png');
+ 
+    class PDF extends FPDF
+    {
+        //Page header
+        function Header()
+        {
+            $this->AddFont('angsa','','angsa.php');
+            $this->SetFont('angsa','',14);	
+			
+            $today = date('d F Y');
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',''),0,1,"L");			
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620','FM-OP-05'),0,1,"R");
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+            $this->Cell(0,6,iconv( 'UTF-8','TIS-620','Page '.$this->PageNo().' of {nb}'),0,1,"R");
+			$this->Cell(25,8,"",0,0,"L");
+			$this->Cell(0,6.5,iconv( 'UTF-8','TIS-620',$GLOBALS["contract"]),0,0,"L");
+            $this->Cell(0,8,iconv( 'UTF-8','TIS-620',$GLOBALS["worksheet_id"].'  '.$GLOBALS["branch"].'      '),0,1,"R");
+			$this->Cell(35,8,"",0,0,"L");
+			$this->Cell(0,6.5,iconv( 'UTF-8','TIS-620',$GLOBALS["customer_name"]),0,1,"L");
+            //$this->Cell(0,8,iconv( 'UTF-8','TIS-620',date_format($GLOBALS["worksheet_date"],"d-M-y").'   '),0,1,"R");
+			//$this->Cell(25,6,"",0,0,"L");
+			//$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["address"]),0,1,"L");			
+			$this->Cell(25,5,"",0,0,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["address"]),0,0,"L");	
+			//$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["address2"].",".$GLOBALS["province"].",".$GLOBALS["postcode"]),0,0,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',date_format($GLOBALS["worksheet_date"],"d-M-y").'      '),0,1,"R");
+			$this->Cell(25,6,"",0,0,"L");
+			//$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["tel"]),0,1,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["address2"].",".$GLOBALS["province"].",".$GLOBALS["postcode"]),0,1,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["customer_id"].'      '),0,1,"R");
+			//$this->Cell(0,6,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+			$this->Cell(25,6,"",0,0,"L");			
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["description"]),0,1,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["customer_ref"].'      '),0,1,"R");
+			//$this->Cell(0,6,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+			$this->Cell(15,6,"",0,0,"L");
+			$this->Cell(0,6,iconv( 'UTF-8','TIS-620',$GLOBALS["remark"]),0,1,"L");			
+
+        }            
+        //Page footer
+        function Footer()
+        {
+			$this->SetY(-26);
+			$this->Cell(25,8,"",0,0,"L");
+			$this->Cell(0,8,iconv( 'UTF-8','TIS-620',$GLOBALS["user_name"].' / '.$GLOBALS["manager_name"]),0,1,"L");
+        }
+
+	}
+
+    $pdf=new PDF('P','mm',array(210,279));
+    $pdf->SetMargins(10, 0, 10, true);
+    $pdf->AliasNbPages();
+    $pdf->AddPage();
+    $pdf->AddFont('angsa','','angsa.php');
+    $pdf->SetFont('angsa','',14);
+	$pdf->SetAutoPageBreak(true,30);
+
+    //-- Transportation
+	//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',''),0,1,"L");
+	
+	$pdf->Image('../images/picbarcode/'.$_GET['worksheet_id'].'.png',10,35,35,13);
+
+	$iquery = "SELECT top 1 a.* from worksheet_cargo_transport a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Transportation'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Vehicle Type'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','License No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Company'),0,0,"C");
+		$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','Operated By'),0,0,"C");
+		$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620','From'),0,0,"C");
+		$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620','To'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+
+    $iquery = "SELECT a.*,b.registration_no,c.description as vtype_desc,d.description as vowner_desc,e.name as operate_by,f.description as from_desc,g.description as to_desc, u.description as uom_desc, cc.erp_contract_no
+    from worksheet_cargo_transport a 
+    left join vehicle b on a.vehicle = b.vehicle_id 
+    left join vehicle_type c on b.vehicle_type = c.code 
+    left join vehicle_owner d on b.vehicle_owner = d.code 
+    left join operator e on a.operator = e.operator_id 
+    left join location f on a.transport_from = f.code 
+    left join location g on a.transport_to = g.code
+	left join uom u on a.uom = u.code
+	left join customer_contract cc on a.contract_no = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' AND no_charge = 0 and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+    $x = 1;
+	$ct = 0;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){   
+        $y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+        $from_desc = newline($row["from_desc"],10);
+        $from_desc_1 = isset($from_desc[1])?$from_desc[1]:"";
+
+        $to_desc = newline($row["to_desc"],10);
+        $to_desc_1 = isset($to_desc[1])?$to_desc[1]:"";
+
+		$img = $manager->make('http://localhost:8181/gen_barcode.php?code='.$row["transport_id"])->save('../images/picbarcode/'.$row["transport_id"].'.png');
+
+		if ($x == 1) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,135,25,10);
+		} else if ($x == 2) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,171,25,10);
+		} else if ($x == 3) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,207,25,10);
+		} else if ($x%3 == 1) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,129,25,10);
+		} else if ($x%3 == 2) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,165,25,10);
+		} else if ($x%3 == 0) {
+			$pdf->Image('../images/picbarcode/'.$row['transport_id'].'.png',173,201,25,10);
+		}
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["transport_id"]),0,0,"C");
+		//$pdf->SetXY(35, $y); 
+		//$pdf->MultiCell(20,6,iconv( 'UTF-8','TIS-620',$row["vtype_desc"]),0,"C");
+		$pdf->SetXY(35, $y); 
+		$pdf->MultiCell(20,6,iconv( 'UTF-8','TIS-620',$row["registration_no"]),0,"C",0);
+		$pdf->SetXY(52, $y);
+		if ($row["vowner_desc"] == 'AAL')
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',$row["vowner_desc"]),0,0,"C");
+		else
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','AAL Other'),0,0,"C");
+        $pdf->Cell(22,6,iconv( 'UTF-8','TIS-620',$row["operate_by"]),0,0,"C");
+		$pdf->MultiCell(30,6,iconv( 'UTF-8','TIS-620',$row["specific_location_from"]),0,"C");
+		$pdf->SetXY(130, $y);
+		$pdf->MultiCell(30,6,iconv( 'UTF-8','TIS-620',$row["specific_location_to"]),0,"C");
+		$pdf->SetXY(160, $y);
+		if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$from_desc_1),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$to_desc_1),0,0,"C");
+		if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+        $y = $pdf->GetY();
+        $pdf->Line(35, $f_line, 35, $y);
+        $pdf->Line(55, $f_line, 55, $y);
+        $pdf->Line(75, $f_line, 75, $y);
+        $pdf->Line(100, $f_line, 100, $y);
+        //$pdf->Line(120, $f_line, 120, $y);
+        $pdf->Line(130, $f_line, 130, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $y = $pdf->GetY() + 1;
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Contract No. : ".$row["erp_contract_no"]),0,0,"L");
+		//$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"| Vehicle type: ".$row["vtype_desc"]),0,0,"L");
+		//$pdf->Cell(79,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cargo Qty : ".$row["cargo_qty"]),0,0,"L");
+        //$pdf->Cell(35,6,iconv( 'UTF-8','TIS-620',"| Weight : ".$row["cargo_weight"]." KGS"),0,0,"L");
+		//$pdf->Cell(79,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(10,6,iconv( 'UTF-8','TIS-620',"KGS"),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+		//$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+        
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        $x++;
+		$ct++;
+		$last = 0;
+
+		if ($ct == 3 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if (($ct%3 == 0) and ($ct > 3 )) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+	
+    }     
+	$iquery = "SELECT top 1 a.* from worksheet_cargo_transport a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		if ($last == 0){
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+		}
+	}
+
+    //$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+
+    //-- Manpower
+    //$pdf->SetTextColor(65,105,225);
+	$iquery = "SELECT top 1 a.* from worksheet_manpower a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and (no_charge = 0 or no_charge is null) ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Manpower'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		//$pdf->SetTextColor(0,0,0);
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620','Position'),0,0,"C");
+		$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620','Operator'),0,0,"C");
+		$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','Company'),0,0,"C");
+		$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620','Operated at'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+
+    $iquery = "SELECT a.*,b.name,b.lastname,b.company,c.description as location_desc, u.description as uom_desc, p.description as charge_as_deas, cc.erp_contract_no
+    from worksheet_manpower a 
+    left join operator b on a.labor = b.operator_id 
+    left join location c on a.location = c.code
+	left join uom u on a.uom = u.code
+	left join position p on p.code = a.charge_as
+	left join customer_contract cc on a.contract_no = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and (no_charge = 0 or no_charge is null) ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+    $x = 1;
+	$m = 0;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){   
+        $y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["labor_service_id"]),0,0,"C");
+        $pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',$row["position"]),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',$row["name"]." ".$row["lastname"]),0,0,"C");
+		if ($row["company"] == 'AAL')
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',$row["company"]),0,0,"C");
+		else
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','AAL Other'),0,0,"C");
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',$row["company"]),0,0,"C");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',$row["location"]),0,0,"C");
+		$pdf->MultiCell(30,6,iconv( 'UTF-8','TIS-620',$row["location"]),0,"C");
+		$pdf->SetXY(160, $y);
+        if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+
+        $y = $pdf->GetY();
+
+        $pdf->Line(35, $f_line, 35, $y);
+        $pdf->Line(72, $f_line, 72, $y);
+        $pdf->Line(108, $f_line, 108, $y);
+        $pdf->Line(130, $f_line, 130, $y);
+        //$pdf->Line(140, $f_line, 140, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $y = $pdf->GetY() + 1;
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+
+        //$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		//$pdf->Cell(79,6,iconv( 'UTF-8','TIS-620',"| Ref.: ".$row["ref1"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		//$pdf->Cell(59,6,iconv( 'UTF-8','TIS-620',"Contract No. :".$row["erp_contract_no"]),0,0,"L");
+		//$pdf->Cell(45,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+        //$pdf->SetTextColor(65,105,225);
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"Amount:"),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        
+        $x++;
+		$c++;
+		$m++;
+		$last = 0;
+
+		if ($m == 3 and $ct == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if (($m%3 == 0) and ($m > 3 ) and ($ct == 0)) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 0 and $m%3 == 0 and $ct > 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 1 and $m == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 2 and $m == 1 and $ct > 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if (($ct%3 == 2) and ($m > 3 ) and ($m%3 == 1 )) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		if ($ct == 3 and $m == 6) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		}
+
+
+		if ($ct == 1 and $m == 3) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			//$pdf->Line(10, $y, 200, $y);
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		}
+
+		//if ($ct%3 == 0 and $m%3 == 2) {
+		//	$y = $pdf->GetY(); 
+		//	$pdf->SetLineWidth(0.4);
+		//	$pdf->Line(10, $y, 200, $y);
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$last = 1;
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//}
+
+		if ($ct == 7 and $m == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		}
+
+		//if ($ct == 2 and $m == 2) {
+		//	$y = $pdf->GetY(); 
+		//	$pdf->SetLineWidth(0.4);
+		//	$pdf->Line(10, $y, 200, $y);
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//}
+
+		if ($ct == 8 and $m == 5) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		}
+
+		if ($ct == 2 and $m == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 1 and $m == 5) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 4 and $m == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 1 and $m%3 == 2 and $ct > 3) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		
+
+    }     
+	$iquery = "SELECT top 1 a.* from worksheet_manpower a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and (no_charge = 0 or no_charge is null) ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		if ($last == 0){
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+		}
+	}
+
+	//if ($c ==3) {
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//}
+
+    //-- Handling
+    //$pdf->SetTextColor(65,105,225);
+	$iquery = "SELECT top 1 a.* from worksheet_cargo_handling a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and (no_charge = 0 or no_charge is null)  ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+
+		//if ($ct == 4 and $m == 4) {
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//}
+		if ($ct == 1 and $m == 2) {
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		}
+		if ($ct%3 == 1 and $m%3 == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Cargo Handling'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		//$pdf->SetTextColor(0,0,0);
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Vehicle Type'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','License No.'),0,0,"C");
+		$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','Company'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Operated By'),0,0,"C");
+		$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620','Operated at'),0,0,"C");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','To'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+
+    $iquery = "SELECT a.*,b.registration_no,c.description as vtype_desc,d.description as vowner_desc,e.name as operate_by,f.description as from_desc,g.description as to_desc, u.description as uom_desc, cc.erp_contract_no
+    from worksheet_cargo_handling a 
+    left join vehicle b on a.vehicle = b.vehicle_id 
+    left join vehicle_type c on b.vehicle_type = c.code 
+    left join vehicle_owner d on b.vehicle_owner = d.code 
+    left join operator e on a.operator = e.operator_id 
+    left join location f on a.transport_from = f.code 
+    left join location g on a.transport_to = g.code
+	left join uom u on a.uom = u.code
+	left join customer_contract cc on a.contract_no = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and (no_charge = 0 or no_charge is null) ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+    $x = 1;
+	$ch = 0;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){ 	
+		
+		
+
+        $y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+        $from_desc = newline($row["from_desc"],10);
+        $from_desc_1 = isset($from_desc[1])?$from_desc[1]:"";
+
+        $to_desc = newline($row["to_desc"],10);
+        $to_desc_1 = isset($to_desc[1])?$to_desc[1]:"";
+
+        //$pdf->SetTextColor(0,0,0);
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["cargo_service_id"]),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["vtype_desc"]),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["registration_no"]),0,0,"C");
+		if ($row["vowner_desc"] == 'AAL')
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',$row["vowner_desc"]),0,0,"C");
+		else
+			$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','AAL Other'),0,0,"C");
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',$row["vowner_desc"]),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["operate_by"]),0,0,"C");
+        $pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',$row["transport_from"]),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$to_desc[0]),0,0,"C");
+        if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',''),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$to_desc_1),0,0,"C");
+        if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+
+        $y = $pdf->GetY();
+        $pdf->Line(35, $f_line, 35, $y);
+        $pdf->Line(55, $f_line, 55, $y);
+        $pdf->Line(75, $f_line, 75, $y);
+        $pdf->Line(100, $f_line, 100, $y);
+        $pdf->Line(120, $f_line, 120, $y);
+        //$pdf->Line(140, $f_line, 140, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $date1 = new DateTime(date_format($row["start_date"],'Y-m-d')." ".date_format($row["start_time"],"H:i"));
+        $date2 = new DateTime(date_format($row["end_date"],'Y-m-d')." ".date_format($row["end_time"],"H:i"));
+        $diff = $date2->diff($date1);
+        $hours = $diff->h;
+        $hours = $hours + ($diff->days*24);
+
+        $y = $pdf->GetY() + 1;
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		//$pdf->Cell(69,6,iconv( 'UTF-8','TIS-620',"| Ref.: ".$row["ref1"]),0,0,"L");
+		//if ($row["quantity"] >= $row["minimum_charge_hour"]) 
+			//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		//else
+		//	$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["minimum_charge_hour"].' '.$row["uom_desc"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		//$pdf->Cell(59,6,iconv( 'UTF-8','TIS-620',"Contract No. :".$row["erp_contract_no"]),0,0,"L");
+		//$pdf->Cell(95,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".' Diesel rate : '.$row["diesel_rate"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+        
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        $x++;
+		$c++;
+		$ch++;
+		$last = 0;
+
+		if ($ch == 3 and $ct == 0 and $m == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ch%3 == 0 and $ch > 3 and $ct == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 1 and $ch%3 == 2 and $m == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 2 and $ch == 1 and $m == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 2 and $ch%3 == 1 and $ch > 3 and $m == 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		
+		if ($ct%3 == 0 and $ch%3 == 0 and $ct > 0) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		//if ($m%3 == 2 and $ch == 1 and $ct == 0) {
+		//	$y = $pdf->GetY(); 
+		//	$pdf->SetLineWidth(0.4);
+		//	$pdf->Line(10, $y, 200, $y);
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$last = 1;
+		//}
+
+		if ($m%3 == 1 and $ch == 2 and $ct%3 == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		if ($m%3 == 1 and $ch > 2 and $ch%3 == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		if ($ct == 1 and $ch == 2 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 2 and $m%3 == 1 and $ch == 3) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 0 and $m%3 == 2 and $ch%3 == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 1 and $m%3 == 1 and $ch == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 2 and $m%3 == 2 and $ch%3 == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 0 and $m%3 == 2 and $ch == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 0 and $m%3 == 2 and $ch == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct%3 == 0 and $m%3 == 1 and $ch == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 1 and $m == 3 and $ch == 2) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+    }     
+	$iquery = "SELECT top 1 a.* from worksheet_cargo_handling a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		if ($last == 0){
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+		}
+	}
+
+    //$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+
+	//if ($cc ==2 and $c ==2) {
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//}
+	//if ($cc ==1 and $c ==2) {
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+	//}
+
+	//-- Service Other
+    //$pdf->SetTextColor(65,105,225);
+	$iquery = "SELECT top 1 a.* from worksheet_service a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+
+		if ($ct%3 == 2 and $m == 1) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Service Other'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		//$pdf->SetTextColor(0,0,0);
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620','Description'),0,0,"C");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620','Description 2'),0,0,"C");
+		$pdf->Cell(10,6,iconv( 'UTF-8','TIS-620','Qty'),0,0,"C");
+		$pdf->Cell(10,6,iconv( 'UTF-8','TIS-620','UOM'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+
+    $iquery = "SELECT a.*,b.name,b.lastname,b.company, u.description as uom_desc, a.agreement_number as erp_contract_no 
+	from worksheet_service a 
+    left join operator b on a.operator = b.operator_id
+	left join uom u on a.uom = u.code
+	left join customer_contract cc on a.agreement_number = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' and a.no_charge = 0 ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+	$so = 0;
+    $x = 1;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){   
+        $y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["cargo_service_id"]),0,0,"C");
+		$pdf->SetXY(45, $y); 
+		$pdf->MultiCell(40,6,iconv( 'UTF-8','TIS-620',$row["description"]),0,"C");
+		$pdf->SetXY(95, $y); 
+		$pdf->MultiCell(45,6,iconv( 'UTF-8','TIS-620',$row["description2"]),0,"C",0);
+        //$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',$row["description"]),0,0,"C");
+        //$pdf->Cell(45,6,iconv( 'UTF-8','TIS-620',$row["description2"]),0,0,"C");
+		$pdf->SetXY(140, $y);
+        $pdf->Cell(10,6,iconv( 'UTF-8','TIS-620',$row["quantity"]),0,0,"C");
+        $pdf->Cell(10,6,iconv( 'UTF-8','TIS-620',$row["uom"]),0,0,"C");
+        if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+        $y = $pdf->GetY();
+
+        $pdf->Line(35, $f_line, 35, $y);
+        $pdf->Line(92, $f_line, 92, $y);
+        $pdf->Line(140, $f_line, 140, $y);
+        $pdf->Line(150, $f_line, 150, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $y = $pdf->GetY() + 1;
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+
+        //$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		//$pdf->Cell(79,6,iconv( 'UTF-8','TIS-620',"| Ref.: ".$row["ref1"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		//$pdf->Cell(59,6,iconv( 'UTF-8','TIS-620',"Contract No. :".$row["erp_contract_no"]),0,0,"L");
+		//$pdf->Cell(45,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+        //$pdf->SetTextColor(65,105,225);
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"Amount:"),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        
+        $x++;
+		$so++;
+		$last = 0;
+
+		if ($so == 3 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($so%3 == 0 and $so > 3 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 2 and $so == 1 and $ch == 0 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 1 and $m == 1 and $so == 1 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if ($ct == 1 and $ch == 1 and $so == 1 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			//$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		
+    }     
+	$iquery = "SELECT top 1 a.* from worksheet_service a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		if ($last == 0){
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+		}
+	}   
+
+	//-- Immigration
+    //$pdf->SetTextColor(65,105,225);
+    //$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Immirgation'),0,1,"L");
+
+	
+	$iquery = "SELECT top 1 a.* from worksheet_immigration a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){ 
+
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',' Immigration'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		//$pdf->SetTextColor(0,0,0);
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620','Expat name'),0,0,"C");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620','Description'),0,0,"C");
+		$pdf->Cell(10,6,iconv( 'UTF-8','TIS-620','Qty'),0,0,"C");
+		$pdf->Cell(10,6,iconv( 'UTF-8','TIS-620','UOM'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+
+    $iquery = "SELECT a.*, u.description as uom_desc, cc.erp_contract_no
+	from worksheet_immigration a
+	left join uom u on a.uom = u.code
+	left join customer_contract cc on a.agreement_number = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+    $x = 1;
+	$im = 0;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){   
+        $y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["immigration_id"]),0,0,"C");
+		$pdf->SetXY(45, $y); 
+		$pdf->MultiCell(40,6,iconv( 'UTF-8','TIS-620',$row["expat_name"]),0,"C");
+		$pdf->SetXY(95, $y); 
+		$pdf->MultiCell(45,6,iconv( 'UTF-8','TIS-620',$row["description"]),0,"C",0);
+        //$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',$row["description"]),0,0,"C");
+        //$pdf->Cell(45,6,iconv( 'UTF-8','TIS-620',$row["description2"]),0,0,"C");
+		$pdf->SetXY(140, $y);
+        $pdf->Cell(10,6,iconv( 'UTF-8','TIS-620',$row["quantity"]),0,0,"C");
+        $pdf->Cell(10,6,iconv( 'UTF-8','TIS-620',$row["uom_desc"]),0,0,"C");
+        if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+
+        $y = $pdf->GetY();
+
+        $pdf->Line(35, $f_line, 35, $y);
+        $pdf->Line(92, $f_line, 92, $y);
+        $pdf->Line(140, $f_line, 140, $y);
+        $pdf->Line(150, $f_line, 150, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $y = $pdf->GetY() + 1;
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+
+        //$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		//$pdf->Cell(79,6,iconv( 'UTF-8','TIS-620',"| Ref.: ".$row["ref1"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		//$pdf->Cell(59,6,iconv( 'UTF-8','TIS-620',"Contract No. :".$row["agreement_number"]),0,0,"L");
+		//$pdf->Cell(45,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(40,6,iconv( 'UTF-8','TIS-620',"| Dept : ".$row["department"]),0,0,"L");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"| Cost center : ".$row["cost_center"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+        //$pdf->SetTextColor(65,105,225);
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',"Amount:"),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        
+        $x++;
+		$im++;
+
+		if ($im == 3 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if (($im%3 == 0) and ($im > 3 )) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+
+		
+    }     
+	$iquery = "SELECT top 1 a.* from worksheet_immigration a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		$y = $pdf->GetY(); 
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 200, $y);
+	}
+
+	//-- Taxi Service
+	$iquery = "SELECT top 1 a.* from worksheet_taxi a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620','Taxi Service'),0,1,"L");
+
+		$y = $pdf->GetY();
+		$f_line = $y;
+
+		$pdf->SetLineWidth(0.4);
+		$pdf->Line(10, $y, 210-10, $y);
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620','No.'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Service ID'),0,0,"C");
+		$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','Vehicle'),0,0,"C");
+		$pdf->Cell(35,6,iconv( 'UTF-8','TIS-620','Driver'),0,0,"C");
+		//$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620','Operated By'),0,0,"C");
+		$pdf->Cell(32,6,iconv( 'UTF-8','TIS-620','From'),0,0,"C");
+		$pdf->Cell(33,6,iconv( 'UTF-8','TIS-620','To'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Started'),0,0,"C");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620','Finished'),0,1,"C");
+
+		$y = $pdf->GetY();
+		$pdf->Line(10, $f_line, 10, $y);
+		$pdf->Line(200, $f_line, 200, $y);
+	}
+	$iquery = "SELECT a.*,b.name,b.lastname,b.company,b.tel, u.description as uom_desc, v.registration_no, cc.erp_contract_no
+	from worksheet_taxi a 
+    left join operator b on a.operator = b.operator_id
+	left join uom u on a.uom = u.code
+	left join vehicle v on a.vehicle = v.vehicle_id
+	left join customer_contract cc on a.contract_no = cc.contract_no
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery); 
+
+    $x = 1;
+	$t = 0;
+    while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+
+		$y = $pdf->GetY(); 
+        $pdf->SetLineWidth(0.4);
+        $pdf->Line(10, $y, 200, $y);
+        $pdf->SetLineWidth(0.2);
+        $f_line = $y;
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$row["taxi_service_id"]),0,0,"C");
+		$pdf->SetXY(35, $y); 
+		$pdf->MultiCell(25,6,iconv( 'UTF-8','TIS-620',$row["registration_no"]),0,"C",0);
+		$pdf->SetXY(60, $y);
+        $pdf->Cell(35,6,iconv( 'UTF-8','TIS-620',$row["name"].' '.$row["lastname"]),0,0,"C");
+		$pdf->MultiCell(32,6,iconv( 'UTF-8','TIS-620',$row["specific_location_from"]),0,"C");
+		$pdf->SetXY(127, $y);
+		$pdf->MultiCell(32,6,iconv( 'UTF-8','TIS-620',$row["specific_location_to"]),0,"C");
+		$pdf->SetXY(159, $y);
+        if (is_null($row["actual_start_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_date"],"d-M-y")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_date"],"d-M-y")),0,0,"C");
+		if (is_null($row["actual_finish_date"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_date"],"d-M-y")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_date"],"d-M-y")),0,1,"C");
+
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',$x),0,0,"C");
+        $pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        $pdf->Cell(35,6,iconv( 'UTF-8','TIS-620',$row["tel"]),0,0,"C");
+        $pdf->Cell(32,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',$from_desc_1),0,0,"C");
+        $pdf->Cell(34,6,iconv( 'UTF-8','TIS-620',$to_desc_1),0,0,"C");
+        if (is_null($row["actual_start_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["start_time"],"H:i")),0,0,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_start_time"],"H:i")),0,0,"C");
+		if (is_null($row["actual_finish_time"]) )
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["end_time"],"H:i")),0,1,"C");
+		else
+			$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',date_format($row["actual_finish_time"],"H:i")),0,1,"C");
+
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(35,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(32,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(34,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(25,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(35,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(32,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(34,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+
+        $y = $pdf->GetY();
+
+        $pdf->Line(35, $f_line, 35, $y);
+		$pdf->Line(60, $f_line, 60, $y);
+		$pdf->Line(95, $f_line, 95, $y);
+        $pdf->Line(128, $f_line, 128, $y);
+        //$pdf->Line(140, $f_line, 140, $y);
+        //$pdf->Line(150, $f_line, 150, $y);
+        $pdf->Line(160, $f_line, 160, $y);
+        $pdf->Line(180, $f_line, 180, $y);
+
+        $pdf->Line(15, $y, 200, $y);
+
+        $y = $pdf->GetY() + 1;
+
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Passenger details: ".$row["contact"]),0,1,"L");
+        //$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+        //$pdf->Cell(85,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		//$pdf->Cell(69,6,iconv( 'UTF-8','TIS-620',"| Ref.: ".$row["ref1"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		//$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		//$pdf->Cell(59,6,iconv( 'UTF-8','TIS-620',"Contract No. :".$row["erp_contract_no"]),0,0,"L");
+		//$pdf->Cell(95,6,iconv( 'UTF-8','TIS-620',"| Charge As: ".$row["charge_as"]),0,0,"L");
+		//$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".' Diesel rate : '.$row["diesel_rate"]),0,0,"L");
+        //$pdf->Cell(30,6,iconv( 'UTF-8','TIS-620',""),0,1,"L");
+
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Charge as: ".$row["charge_as"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Contract Number: ".$row["erp_contract_no"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Contract Line No: "),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"| ".$row["quantity"].' '.$row["uom_desc"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Remark: ".$row["remark"]),0,0,"L");
+		$pdf->Cell(20,6,iconv( 'UTF-8','TIS-620',"Diesel : ".$row["diesel_rate"]),0,1,"L");
+        
+        $pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#1: ".$row["ref1"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#2: ".$row["ref2"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#3: ".$row["ref3"]),0,1,"L");
+		$pdf->Cell(5,6,iconv( 'UTF-8','TIS-620',""),0,0,"C");
+		$pdf->Cell(60,6,iconv( 'UTF-8','TIS-620',"Ref#4: ".$row["ref4"]),0,0,"L");
+		$pdf->Cell(55,6,iconv( 'UTF-8','TIS-620',"Ref#5: ".$row["ref5"]),0,0,"L");
+		$pdf->Cell(50,6,iconv( 'UTF-8','TIS-620',"Ref#6: ".$row["ref6"]),0,1,"L");
+
+        $y = $pdf->GetY();
+        $pdf->Line(10, $f_line, 10, $y);
+        $pdf->Line(15, $f_line, 15, $y);
+        $pdf->Line(200, $f_line, 200, $y);
+        
+        $x++;
+		$t++;
+		$last = 0;
+
+		//if ($t == 3) {
+		//	$y = $pdf->GetY(); 
+		//	$pdf->SetLineWidth(0.4);
+		//	$pdf->Line(10, $y, 200, $y);
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$last = 1;
+		//}
+		//if (($t == 6) or ($t == 9)) {
+		//	$y = $pdf->GetY(); 
+		//	$pdf->SetLineWidth(0.4);
+		//	$pdf->Line(10, $y, 200, $y);
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+		//	$last = 1;
+		//}
+		if ($t == 3 ) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+		if (($t%3 == 0) and ($t > 3 )) {
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$pdf->Cell(0,6,iconv( 'UTF-8','TIS-620',""),0,1,"C");
+			$last = 1;
+		}
+    }   
+
+	$iquery = "SELECT top 1 a.* from worksheet_taxi a
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+    $stmt = sqlsrv_query($conn, $iquery);
+
+	while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+		if ($last == 0){
+			$y = $pdf->GetY(); 
+			$pdf->SetLineWidth(0.4);
+			$pdf->Line(10, $y, 200, $y);
+		}
+	}
+
+    $pdf->Output();       
+
+?>

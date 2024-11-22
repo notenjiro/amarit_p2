@@ -1,0 +1,24 @@
+<?php
+ini_set('display_errors', 'On');
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+
+
+$fQuery = "SELECT  * FROM miledge_calc";
+$result = sqlsrv_query($conn, $fQuery);
+$raw['data'] = array();
+
+
+while($row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC)){
+	if ($row['long_haul'] == 0)
+		$long_haul = 'No';
+	else
+		$long_haul = 'Yes';
+    $data = [$row['reccode'], $row['miledge_from'], $row['miledge_to'], $row['qty'], $long_haul];
+    array_push($raw['data'],$data);
+}
+
+echo json_encode($raw);
+sqlsrv_close($conn);
+?>

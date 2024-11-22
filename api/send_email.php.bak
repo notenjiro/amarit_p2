@@ -1,0 +1,512 @@
+<?php
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+require_once "../phpmailer/class.phpmailer.php";
+
+//$user_name = $_GET['user_name'];
+//$worksheet_id = $_GET['worksheet_id'];
+
+//$fQuery = "SELECT  * FROM users WHERE user_name = '$user_name'";
+//$result = sqlsrv_query($conn, $fQuery);
+//$row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC);
+
+//-- Setup
+//$host = "smtp.csloxinfo.com";//SMTP_HOST;
+//$user = "frontend@amarit.co.th";//SMTP_USER;
+//$pass = "Amaritfe@2022";//SMTP_PASS;
+//$from = "frontend@amarit.co.th";//SMTP_FROM;
+//$from_name = "frontend@amarit.co.th";//SMTP_FROM_NAME;
+//$port = "25";//SMTP_PORT;
+
+//$to = "pnitarn.t@gmail.com";//$row["email"];
+//$subject = "Worksheet No. $worksheet_id Ready to transfer";
+//$message = "Worksheet No. $worksheet_id Ready to transfer"; 
+
+//$fm = "frontend@amarit.co.th"; 
+//$to = "pnitarn.t@gmail.com"; 
+//$subj = "Worksheet No. $worksheet_id Ready to transfer";
+//$message = "Worksheet No. $worksheet_id Ready to transfer";
+//$mesg = $message;
+//$mail = new PHPMailer();
+
+//$mail->CharSet = "utf-8"; 
+//$mail->IsSMTP();
+//$mail->Mailer = "smtp";
+//$mail->SMTPAuth = true;
+//$mail->Host = "smtp.csloxinfo.com"; 
+//$mail->Port = "587"; 
+//$mail->Username = "frontend@amarit.co.th"; 
+//$mail->Password = "Amaritfe@2022"; 
+
+//$mail->From = $fm;
+//$mail->AddAddress($to);
+//$mail->Subject = $subj;
+//$mail->Body     = $mesg;
+//$mail->WordWrap = 50;
+
+//$mail->CharSet = "utf-8"; 
+//$mail->SMTPDebug = 1;
+
+//$mail->IsSMTP();
+//$mail->Mailer = "smtp";
+//$mail->SMTPAuth = true;
+
+//$mail->SMTPSecure = "tls";
+//$mail->Port = '25';  
+//$mail->IsHTML(true);
+
+//$mail->Host = $host;          
+//$mail->Username = $user;
+//$mail->Password = $pass;
+
+//$mail->SetFrom($fm,$fm);
+//$mail->AddAddress($to);
+//$mail->Subject = $subject;
+//$mail->Body = $message;
+//$mail->WordWrap = 50;
+
+$worksheet_id = $_GET['worksheet_id'];
+$iquery = "SELECT *, a.remark as remark, b.name as customer_name from worksheet a join customer b on a.customer = b.customer_id join subject c on a.subject = c.code left join users u on u.user_name = a.user_id  WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+$row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC);
+$worksheetcontact = $row["contract"];
+
+$fm = "frontend@amarit.co.th"; 
+$to = $row["email"];
+$subj = "Worksheet No. $worksheet_id Ready to transfer";
+
+$message = '<html><head><title></title>
+<style>
+#customers {
+  font-family: Calibri, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#customers td, #customers th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#customers tr:nth-child(even){background-color: #f2f2f2;}
+
+#customers tr:hover {background-color: #ddd;}
+
+#customers th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #228B22;
+  color: white;
+}
+
+#manpower {
+  font-family: Calibri, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#manpower td, #manpower th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#manpower tr:nth-child(even){background-color: #f2f2f2;}
+
+#manpower tr:hover {background-color: #ddd;}
+
+#manpower th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #228B22;
+  color: white;
+}
+</style>
+</head>
+<body>
+  <p></p>';
+$iquery = "SELECT top 1 a.* from worksheet_cargo_transport a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+	$message.= '<table id="customers">
+	<thead>
+	<tr >
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Charge as</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Operator / Driver</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Client</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Cargo description</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" colspan="3">From</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" colspan="3">To</td>
+
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Trip ID</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Registration No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Name &amp; Contact No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Contact person</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Start date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Start time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Contact person</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Finish date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">Finish time</td>
+	</tr>';
+}
+ $iquery = "SELECT a.*,b.registration_no,c.description as vtype_desc,d.description as vowner_desc,e.name+' '+e.lastname as operate_by,f.description as from_desc,g.description  as to_desc,e.tel, cu.name as customer_name
+    from worksheet_cargo_transport a 
+    left join vehicle b on a.vehicle = b.vehicle_id 
+    left join vehicle_type c on b.vehicle_type = c.code 
+    left join vehicle_owner d on b.vehicle_owner = d.code 
+    left join operator e on a.operator = e.operator_id 
+    left join location f on a.transport_from = f.code 
+    left join location g on a.transport_to = g.code
+	left join customer cu on a.customer = cu.customer_id
+    WHERE worksheet_id = '$worksheet_id' AND no_charge = 0 and line_status <> 'Cancelled' ";
+$stmt = sqlsrv_query($conn, $iquery);
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+	$worksheet_cargo_transport = 1;
+	$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" rowspan="2">'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["charge_as"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["operate_by"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" rowspan="2">'.$row["customer_name"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" rowspan="2">'.$row["cargo_type"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="3">'.$row["transport_from"]." | ".$row["specific_location_from"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px" colspan="3">'.$row["transport_to"]." | ".$row["specific_location_to"].'</td>
+
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" rowspan="2">'.$row["transport_id"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" rowspan="2">'.$row["remark"].'</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["registration_no"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["tel"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["contact1"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.$row["contact2"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+	</tr>';
+	$x++;
+}
+if ($worksheet_cargo_transport == 1) {
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="14">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$iquery = "SELECT top 1 a.* from worksheet_manpower a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+$message.= '<br><table id="manpower">
+	<thead>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Worker type</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Worker detail</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Work location</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Start</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Finish</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Charge as</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Client</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Service ID</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Status</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+	</tr>';
+}
+$iquery = "SELECT a.*,b.name,b.lastname,b.company,c.description as location_desc, cu.name as customer_name, a.charge_as as position
+    from worksheet_manpower a
+    left join operator b on a.labor = b.operator_id 
+    left join location c on a.location = c.code
+	left join customer cu on a.customer = cu.customer_id
+	left join position p on a.charge_as = p.code
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+$stmt = sqlsrv_query($conn, $iquery); 
+
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){  
+	$worksheet_manpower = 1;
+	$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["position"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["name"].' '.$row["lastname"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["location"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["charge_as"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["customer_name"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["labor_service_id"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >Booked</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["remark"].'</td>    
+	</tr>';
+	$x++;
+}
+if ($worksheet_manpower == 1) {
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="13">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$iquery = "SELECT top 1 a.* from worksheet_cargo_handling a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+$message.= '<br><table id="customers">
+	<thead>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" >Worker type</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" >Worker detail</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">Work location</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" colspan="2">Start</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" colspan="2">Finish</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">Charge as</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">Service ID</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">Status</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">Registration No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">Name &amp; Contact No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:green;color:#ffffff;">time</td>
+	</tr>';
+}
+ $iquery = "SELECT a.*,b.registration_no,c.description as vtype_desc,d.description as vowner_desc,e.name+' '+e.lastname+' '+e.tel as operate_by,f.description as from_desc,g.description  as to_desc
+    from worksheet_cargo_handling a 
+    left join vehicle b on a.vehicle = b.vehicle_id 
+    left join vehicle_type c on b.vehicle_type = c.code 
+    left join vehicle_owner d on b.vehicle_owner = d.code 
+    left join operator e on a.operator = e.operator_id 
+    left join location f on a.transport_from = f.code 
+    left join location g on a.transport_to = g.code
+    WHERE worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+$stmt = sqlsrv_query($conn, $iquery); 
+
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+	$worksheet_cargo_handling = 1;
+	$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["vtype_desc"].' '.$row["registration_no"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["operate_by"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["transport_from"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["charge_as"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["cargo_service_id"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >Booked</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["remark"].'</td>    
+	</tr>';
+	$x++;
+}
+if ($worksheet_cargo_handling == 1){
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="13">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$iquery = "SELECT top 1 a.* from worksheet_service a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+$message.= '<br><table id="manpower">
+	<thead>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Description</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Description 2</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Contact person</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Start</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Finish</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+	</tr>';
+}
+$iquery = "SELECT a.*
+    from worksheet_service a 
+    WHERE a.worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery); 
+
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){  
+	$worksheet_service = 1;
+	$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["description"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["description2"].' '.$row["lastname"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["contact"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["remark"].'</td>    
+	</tr>';
+	$x++;
+}
+if ($worksheet_service == 1) {
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="13">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$iquery = "SELECT top 1 a.*,b.description as service_name
+    from worksheet_immigration a 
+	left join contract_immigration b on a.service = b.contract_line
+    WHERE a.worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+$stmt = sqlsrv_query($conn, $iquery);
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){ 
+	$worksheet_immigration = 1;
+	$message.= '<br><table id="customers">
+	<thead>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Expat name</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Description</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Service</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Start</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" colspan="2">Finish</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:red;color:#ffffff;">time</td>
+	</tr>';
+}
+$iquery = "SELECT a.*,b.description as service_name
+    from worksheet_immigration a 
+	left join contract_immigration b on a.service = b.contract_line
+    WHERE a.worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery); 
+
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){  
+$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["expat_name"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["description"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["service"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["remark"].'</td>    
+	</tr>';
+	$x++;
+}
+if ($worksheet_immigration == 1) {
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="13">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$iquery = "SELECT top 1 a.* from worksheet_taxi a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+$message.= '<br><table id="customers">
+	<thead>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">No.</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Vehicle</td>
+	 <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Driver</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Client</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Passenger details</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Transport from</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Transport to</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" colspan="2">Start</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" colspan="2">Finish</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;" rowspan="2">Remark</td>
+	</tr>
+	<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">time</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">date</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;background-color:#228B22;color:#ffffff;">time</td>
+	</tr>';
+}
+$iquery = "SELECT a.*,b.name,b.lastname,b.company, u.description as uom_desc, v.registration_no, c.name as customer_name, v.vehicle_type
+	from worksheet_taxi a 
+    left join operator b on a.operator = b.operator_id
+	left join uom u on a.uom = u.code
+	left join vehicle v on a.vehicle = v.vehicle_id
+	left join customer c on a.customer = c.customer_id
+    WHERE a.worksheet_id = '$worksheet_id' and line_status <> 'Cancelled' ";
+$stmt = sqlsrv_query($conn, $iquery); 
+
+$x = 1;
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){  
+$message.= '<tr>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$x.'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["registration_no"].' '.$row["vehicle_type"].'</td>
+	 <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["name"].' '.$row["lastname"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["customer_name"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["contact"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["transport_from"].'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["transport_to"].'</td>
+	<td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["start_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_date"],"d-M-y").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;">'.date_format($row["end_time"],"H:i").'</td>
+    <td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" >'.$row["remark"].'</td>    
+	</tr>';
+	$x++;
+}
+$iquery = "SELECT top 1 a.* from worksheet_taxi a WHERE worksheet_id = '$worksheet_id'";
+$stmt = sqlsrv_query($conn, $iquery);
+
+while($row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+	$message.= '<tr><td style="font-size:12px;font-family:Calibri;border-color:black;border-style:solid;border-width:1px;" colspan="13">'.'Worksheet No. : '.$worksheet_id.' |  Remark :'.'</td></tr>';
+	$message.= '</thead></table>';
+}
+
+$message.= '</body></html>';
+
+$mesg = $message;
+
+$mail = new PHPMailer();
+$mail->CharSet = "utf-8";
+$mail->IsSMTP();
+$mail->Mailer = "smtp";                                
+$mail->Host = "smtp.csloxinfo.com";      
+$mail->Port = 587;
+$mail->IsHTML(true);
+$mail->Username = "frontend@amarit.co.th";  
+$mail->Password = "Amaritfe@2022";    
+
+$mail->SetFrom($fm,$fm);
+$mail->AddAddress($to);
+$mail->Subject = $subj;
+$mail->Body     = $mesg;
+$mail->WordWrap = 50;  
+
+if(!$mail->Send()) {
+    $Data["Status"] = "Error";
+    $Data["msg"] = "Unable to send email. Please try again.";
+} else {
+	$Data["Status"] = "Success";
+    $Data["msg"] = "Your mail has been sent successfully.";
+}
+
+echo json_encode($Data);
+sqlsrv_close($conn);
+?>

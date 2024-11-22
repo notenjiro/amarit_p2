@@ -1,0 +1,22 @@
+<?php
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+$user_role = $_GET["user_role"];
+$user_name = $_GET["user_name"];
+
+$fQuery = "SELECT  a.*,b.name as customer_name,c.description as subject_name FROM worksheet a left join customer b on b.customer_id = a.customer left join subject c on c.code = a.subject";
+//if($user_role != 'supervisor'){
+//    $fQuery .= " WHERE user_id = '$user_name'";
+//}
+$result = sqlsrv_query($conn, $fQuery);
+$raw['data'] = array();
+
+while($row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC)){
+    $data = [$row['reccode'],"",$row['worksheet_id'], $row['worksheet_status'], $row['printed'], $row['branch'], date_format($row['worksheet_date'],'d/m/Y'),$row['subject_name'] , $row['customer_name'], $row['contract'], $row['customer_ref'], $row['reccode']];
+    array_push($raw['data'],$data);
+}
+
+echo json_encode($raw);
+sqlsrv_close($conn);
+?>

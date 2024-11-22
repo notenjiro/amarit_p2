@@ -1,0 +1,157 @@
+.msg {
+margin: 30px auto;
+padding: 10px;
+border-radius: 5px;
+color: #3c763d;
+background: #dffod8;
+border: 1px solid #3c763d;
+width: 50%
+text-align: center;
+}
+*{
+  padding: 0;
+  margin: 0;
+  --color: white;
+  box-sizing: border-box;
+  font-family: sans-serif; 
+  --z-index: 100;
+}
+nav{
+  background: rgb(0,100,0);
+}
+nav a{
+  color: white;
+  text-decoration: none;
+}
+nav:after{
+  content: '';
+  clear: both;
+  display: table;
+}
+nav .logo{
+  float: right;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 60px;
+  padding-right: 20px;
+  --display: none;
+}
+nav ul{
+  float: left;
+  list-style: none;
+  margin-right: 40px;
+  position: relative;
+  top: 5px;
+}
+nav ul li{
+  float: left;
+  display: inline-block;
+  background: rgb(0,100,0);
+  margin: 0 5px;
+}
+nav ul li a{
+  color: white;
+  text-decoration: none;
+  line-height: 50px;
+  font-size: 18px;
+  padding: 8px 15px;
+}
+nav ul li a:hover{
+  color: cyan;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #33ffff, 
+			  0 0 5px #66ffff;
+}
+nav ul ul li a:hover{
+  color: cyan;
+  box-shadow: none;
+}
+nav ul ul{
+  position: absolute;
+  top: 90px;
+  border-top: 3px solid cyan;
+  opacity: 0;
+  visibility: hidden;
+  transition: top .3s;
+}
+nav ul ul ul{
+  border-top: none;
+}
+nav ul li:hover > ul{
+  top: 50px;
+  opacity: 1;
+  visibility: visible;
+}
+nav ul ul li{
+  position: relative;
+  margin: 0px;
+  width: 400px;
+  float: none;
+  display: list-item;
+  border-bottom: 1px solid rgb(0,100,0);
+  z-index: 100;
+}
+.show,.icon, input{
+  display: none;
+}
+
+@media all and (max-width: 968px){
+  nav ul{
+    margin-right: 0px;
+	float: left;
+  }
+  nav .logo{
+    padding-left: 30px;
+	width: 100%;
+  }
+  nav ul li, nav ul ul li{
+    display: block;
+	width: 100%
+  }
+  nav ul ul{
+    top: 70px;
+	position: static;
+	border-top: none;
+	float: none;
+	display: none;
+	opacity: 1;
+	visibility: visible;
+  }
+  nav ul ul a{
+    padding-left: 40px;
+  }
+  .show{
+    display: block;
+	color: white;
+	font-size: 18px;
+	padding: 0 20px;
+	line-height: 70px;
+	cursor: pointer;
+  }
+  .show:hover{
+    color: cyan;
+  }
+  .icon{
+    display: block;
+	color: white;
+	position: absolute;
+	right: 40px;
+	line-height: 70px;
+	font-size: 25px;
+	cursor: pointer;
+	top: 25px;
+  }
+  nav ul li a:hover{
+    box-shadow: none;
+  }
+  .show + a{
+    display: none;
+  }
+  .show + ul{
+    display: block;
+  }
+}
+  [id^=btn]:checked + ul{
+    display: block;
+  }

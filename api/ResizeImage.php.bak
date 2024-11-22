@@ -1,0 +1,52 @@
+<?php
+
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+$fQuery = "SELECT  * FROM application_setup";
+$result = sqlsrv_query($conn, $fQuery);
+
+$row = sqlsrv_fetch_array( $result, SQLSRV_FETCH_ASSOC);
+
+/* Getting file name */
+$filename = $_GET['filename'];
+  
+$file_name = $_FILES['file']['name'];
+$ext = 'png';//pathinfo($file_name, PATHINFO_EXTENSION);
+
+//$image = imagecreatefrompng($filename.".".$ext); break;
+//$resize = imagescale($filename.".".$ext , 200, 200);
+//imagepng( $resize, $filename.".".$ext );
+
+/* Location */
+//$location = '../uploads/'.$filename.".".$ext;//
+//$location = $row['picture_folder'].$resize;
+$location = $row['picture_folder'].$filename.".".$ext;
+
+//list($width,$height) = getimagesize($row['picture_folder'].$filename.".".$ext);
+
+if(move_uploaded_file($_FILES['file']['tmp_name'], $location)){
+    $Data["status"] = "success";
+    $Data["msg"] = "Upload success";
+}else{
+    $Data["status"] = "error";
+    $Data["msg"] = "มีบางอย่างผิดพลาด";
+}
+
+$filename = 'WS220500004TP2200002step201';
+
+shell_exec('"../Tesseract-OCR/tesseract.exe" "../uploads/'.$filename.'.png" out');
+
+//shell_exec('"C:\\Program Files\\Tesseract-OCR\\tesseract" "C:\\xampp\\htdocs\\uploads\\WS220500002TP2200001step201.png" out');
+
+$myfile = fopen("../api/out.txt", "r") or die("Unable to open file!");
+$Data["miledge"] = fread($myfile,filesize("../api/out.txt"));
+fclose($myfile);
+
+//shell_exec('"C:\\Program Files\\Tesseract-OCR\\tesseract" "C:\\xampp\\htdocs\\uploads\\WS220500002TP2200001step201.png" out');
+
+echo json_encode($Data);
+
+sqlsrv_close($conn);
+
+?>

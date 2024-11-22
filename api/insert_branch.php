@@ -1,0 +1,26 @@
+<?php
+error_reporting(1);
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+$code = $_POST['code'];
+$description = $_POST['description'];
+$department = $_POST['department'];
+$cost_center = $_POST['cost_center'];
+
+$iquery = "INSERT INTO branch (code, description, department, cost_center) VALUES ('$code', '$description', '$department', '$cost_center')";
+$stmt = sqlsrv_query($conn, $iquery);
+
+if($stmt === false){
+    $Data["Status"] = "Error";
+    $Data["msg"] = "มีข้อมูลซ้ำกับที่มีอยู่แล้ว";
+}else{
+    $Data["Status"] = "Success";
+    $Data["msg"] = "Data has been updated";
+}
+
+echo json_encode($Data);
+
+sqlsrv_close($conn);
+
+?>

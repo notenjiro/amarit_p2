@@ -1,0 +1,187 @@
+*{
+  padding: 0;
+  margin: 0;
+  --color: white;
+  box-sizing: border-box;
+  font-family: sans-serif; 
+  --z-index: 100;
+}
+.login{
+  --background-image: url(background.jpg);
+  --background-repeat: no-repeat;
+  --background-position: center;
+  --background-size: cover;
+  margin: 0;
+  padding: 0;
+  font-family: montserrat;
+  background: linear-gradient(120deg,#2980b9, #8e44ad);
+  height: 100vh;
+  overflow: hidden;
+}
+.center{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  background: white;
+  border-radius: 10px;
+}
+.center form{
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+form .txt_field{
+  position: relative;
+  border-botton: 2px solid #adadad;
+  margin: 30px 0;
+}
+.txt_field input{
+  width: 100%;
+  padding: 0 5px;
+  height: 40px;
+  font-size: 16px;
+  border: none;
+  background: none;
+  outline: none;
+}
+nav{
+  background: rgb(0,100,0);
+}
+nav a{
+  color: white;
+  text-decoration: none;
+}
+nav:after{
+  content: '';
+  clear: both;
+  display: table;
+}
+nav .logo{
+  float: right;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 50px;
+  padding-right: 40px;
+  --display: none;
+}
+nav ul{
+  float: left;
+  list-style: none;
+  margin-right: 40px;
+  position: relative;
+  top: 5px;
+}
+nav ul li{
+  float: left;
+  display: inline-block;
+  background: rgb(0,100,0);
+  margin: 0 5px;
+}
+nav ul li a{
+  color: white;
+  text-decoration: none;
+  line-height: 50px;
+  font-size: 18px;
+  padding: 8px 15px;
+}
+nav ul li a:hover{
+  color: cyan;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #33ffff, 
+			  0 0 5px #66ffff;
+}
+nav ul ul li a:hover{
+  color: cyan;
+  box-shadow: none;
+}
+nav ul ul{
+  position: absolute;
+  top: 90px;
+  border-top: 3px solid cyan;
+  opacity: 0;
+  visibility: hidden;
+  transition: top .3s;
+}
+nav ul ul ul{
+  border-top: none;
+}
+nav ul li:hover > ul{
+  top: 50px;
+  opacity: 1;
+  visibility: visible;
+}
+nav ul ul li{
+  position: relative;
+  margin: 0px;
+  width: 380px;
+  float: none;
+  display: list-item;
+  border-bottom: 1px solid rgb(0,100,0);
+  z-index: 100;
+}
+.show,.icon, input{
+  display: none;
+}
+
+@media all and (max-width: 968px){
+  nav ul{
+    margin-right: 0px;
+	float: left;
+  }
+  nav .logo{
+    padding-left: 30px;
+	width: 100%;
+  }
+  nav ul li, nav ul ul li{
+    display: block;
+	width: 100%
+  }
+  nav ul ul{
+    top: 70px;
+	position: static;
+	border-top: none;
+	float: none;
+	display: none;
+	opacity: 1;
+	visibility: visible;
+  }
+  nav ul ul a{
+    padding-left: 40px;
+  }
+  .show{
+    display: block;
+	color: white;
+	font-size: 18px;
+	padding: 0 20px;
+	line-height: 70px;
+	cursor: pointer;
+  }
+  .show:hover{
+    color: cyan;
+  }
+  .icon{
+    display: block;
+	color: white;
+	position: absolute;
+	right: 40px;
+	line-height: 70px;
+	font-size: 25px;
+	cursor: pointer;
+	top: 25px;
+  }
+  nav ul li a:hover{
+    box-shadow: none;
+  }
+  .show + a{
+    display: none;
+  }
+  .show + ul{
+    display: block;
+  }
+}
+  [id^=btn]:checked + ul{
+    display: block;
+  }
+}

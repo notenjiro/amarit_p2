@@ -1,0 +1,15 @@
+<?php
+error_reporting(0);
+require_once '../config_db.php';
+require_once '../utils/helper.php';
+
+
+
+$Data["Status"] = "Success";
+$Data["msg"] = "Data has been updated";
+
+echo json_encode($Data);
+
+sqlsrv_close($conn);
+
+?>

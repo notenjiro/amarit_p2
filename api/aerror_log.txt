@@ -1,0 +1,4 @@
+SQLSTATE: 42000
+Code: 8114
+Message: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Error converting data type varchar to numeric.
+------------------------
