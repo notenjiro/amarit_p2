@@ -799,7 +799,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span><span style="color:red"> *</span>
+                                        <span>Vehicle xx</span><span style="color:red"> *</span>
                                         <select name="vehicle" id="transport_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -2251,7 +2251,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span><span style="color:red"> *</span>
+                                        <span>Vehicle 22</span><span style="color:red"> *</span>
                                         <select name="cargo_vehicle" id="cargo_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -2876,7 +2876,7 @@
 
                                 <div class="col-4" id="serviceother_vehicle">
                                     <div class="form-group">
-                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle 33</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="serviceother_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2" onchange="getDataService(id)">
@@ -4133,7 +4133,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span><span style="color:red"> *</span>
+                                        <span>Vehicle 44</span><span style="color:red"> *</span>
                                         <select name="taxi_vehicle" id="taxi_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -9687,7 +9687,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle 55</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="agencyservice_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
@@ -10414,7 +10414,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle 66</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="managementfree_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
@@ -14926,26 +14926,67 @@
 
     $("#cargo_vehicle").on("change", function () {
         get_vehicle_handling($("#customer").val());
-        get_vehicle2($("#cargo_vehicle").val());
+        get_vehicle2("cargo", $("#cargo_vehicle").val());
 
         //get_vehicle_handling($("#customer").val());
         //$('#cargo_charge_as').val($("#cargo_outsource_charge_as").val());
 
         //get_contract_cargo($("#customer").val(),$("#charge_as2").val(),$("#diesel_rate").val(),$("#cargo_transport_from").val());
     })
+    
+    $("#taxi_vehicle").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("taxi", $("#taxi_vehicle").val());
+    })
+    $("#agencyservice_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("agencyservice", $("#agencyservice_vehicle_id").val());
+    })
+    $("#managementfree_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("managementfree", $("#managementfree_vehicle_id").val());
+    })
+    $("#provisionincome_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("provisionincome", $("#provisionincome_vehicle_id").val());
+    })
+    $("#rental_vehicle").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("rental", $("#rental_vehicle").val());
+    })
+    
 
-    async function get_vehicle2(vehicle) {
+
+    async function get_vehicle2(menu, vehicle) {
         $.ajax({
             type: 'GET',
             dataType: "json",
             url: 'api/get_vehicle.php?vehicle_id=' + vehicle,
             success: function (data) {
-                $('#cargo_charge_as').val(data.type);
-                //$("#cargo_charge_as").val('CRANE 40T');
-                $('#cargo_outsource_charge_as').val(data.type);
-                get_contract_cargo($("#customer").val(), data.type, $("#cargo_diesel_rate").val(), $("#cargo_transport_from").val());
-                $('#cargo_department').val(data.department);
-                $('#cargo_cost_center').val(data.cost_center);
+                if(menu == "cargo") {
+                    $('#cargo_charge_as').val(data.type);
+                    //$("#cargo_charge_as").val('CRANE 40T');
+                    $('#cargo_outsource_charge_as').val(data.type);
+                    get_contract_cargo($("#customer").val(), data.type, $("#cargo_diesel_rate").val(), $("#cargo_transport_from").val());
+                    $('#cargo_department').val(data.department);
+                    $('#cargo_cost_center').val(data.cost_center);
+                } else if(menu == "taxi") {
+                    $('#taxi_vehicle_type').val(data.type);
+                    // $('#taxi_charge_as').val(data.type);
+                } else if(menu == "agencyservice") {
+                    $('#agencyservice_vehicle_type').val(data.type);
+                    // $('#agencyservice_charge_as').val(data.type);
+                } else if(menu == "managementfree") {
+                    $('#managementfree_vehicle_type').val(data.type);
+                    // $('#managementfree_charge_as').val(data.type);
+                } else if(menu == "provisionincome") {
+                    $('#provisionincome_vehicle_type').val(data.type);
+                    // $('#provisionincome_charge_as').val(data.type);
+                } else if(menu == "rental") {
+                    $('#rental_vehicle_type').val(data.type);
+                    // $('#rental_charge_as').val(data.type);
+                }
+                
                 //$('#cargo_charge_as').val(data.type);
             }
         });
