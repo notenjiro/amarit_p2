@@ -2251,7 +2251,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle 22</span><span style="color:red"> *</span>
+                                        <span>Vehicle</span><span style="color:red"> *</span>
                                         <select name="cargo_vehicle" id="cargo_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -2876,7 +2876,7 @@
 
                                 <div class="col-4" id="serviceother_vehicle">
                                     <div class="form-group">
-                                        <span>Vehicle 33</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="serviceother_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2" onchange="getDataService(id)">
@@ -2900,7 +2900,7 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="serviceother_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" onchange="getDataService(id)">
+                                            aria-describedby="inputGroupPrepend2" onchange="changeOperator('serviceother_operator_id', 'serviceother_position')">
                                             <option value=""></option>
                                             <?php
                                             $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch,o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
@@ -4133,7 +4133,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle 44</span><span style="color:red"> *</span>
+                                        <span>Vehicle</span><span style="color:red"> *</span>
                                         <select name="taxi_vehicle" id="taxi_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -9687,7 +9687,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle 55</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="agencyservice_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
@@ -9728,14 +9728,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="agencyservice_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('agencyservice_operator_id', 'agencyservice_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -9764,8 +9764,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="agencyservice_position"
-                                            class="form-control">
+                                        <select name="position" id="agencyservice_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -10414,7 +10424,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle 66</span> <?php //switch transport_vehicle to service_vehicle 
+                                        <span>Vehicle</span> <?php //switch transport_vehicle to service_vehicle 
                                         ?>
                                         <select name="vehicle_id" id="managementfree_vehicle_id" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
@@ -10454,14 +10464,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="managementfree_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('managementfree_operator_id', 'managementfree_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -10490,8 +10500,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="managementfree_position"
-                                            class="form-control">
+                                        <select name="position" id="managementfree_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -11179,14 +11199,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="provisionincome_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('provisionincome_operator_id', 'provisionincome_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -11213,8 +11233,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="provisionincome_position"
-                                            class="form-control">
+                                        <select name="position" id="provisionincome_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -11658,6 +11688,13 @@
                 $('#serviceother_charge_as').val(selectedValue);
             }
         }
+    }
+
+    function changeOperator(id, positionId) {
+        const selectElement = document.getElementById(id);
+        const selected = selectElement.options[selectElement.selectedIndex];
+        const selectedValue = selected.getAttribute('name');
+        $('#' + positionId).val(selectedValue);
     }
 
     function copyJobs(id) { //copy worksheet เดียวกัน
