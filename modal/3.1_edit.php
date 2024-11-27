@@ -799,7 +799,7 @@
 
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <span>Vehicle</span><span style="color:red"> *</span>
+                                        <span>Vehicle xx</span><span style="color:red"> *</span>
                                         <select name="vehicle" id="transport_vehicle" class="form-control"
                                             aria-describedby="inputGroupPrepend2">
                                             <option value=""></option>
@@ -2900,7 +2900,7 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="serviceother_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" onchange="getDataService(id)">
+                                            aria-describedby="inputGroupPrepend2" onchange="changeOperator('serviceother_operator_id', 'serviceother_position')">
                                             <option value=""></option>
                                             <?php
                                             $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch,o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
@@ -9728,14 +9728,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="agencyservice_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('agencyservice_operator_id', 'agencyservice_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -9764,8 +9764,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="agencyservice_position"
-                                            class="form-control">
+                                        <select name="position" id="agencyservice_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -10454,14 +10464,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="managementfree_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('managementfree_operator_id', 'managementfree_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -10490,8 +10500,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="managementfree_position"
-                                            class="form-control">
+                                        <select name="position" id="managementfree_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -11179,14 +11199,14 @@
                                         <?php //switch transport_operator to service_operator 
                                         ?>
                                         <select name="operator_id" id="provisionincome_operator_id" class="form-control"
-                                            aria-describedby="inputGroupPrepend2" required>
+                                            aria-describedby="inputGroupPrepend2" required onchange="changeOperator('provisionincome_operator_id', 'provisionincome_position')">
                                             <option value=""></option>
                                             <?php
-                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
+                                            $fQuery = "SELECT o.operator_id, o.name, o.lastname, p.description, o.branch, o.position FROM operator o left join position p on p.code = o.position where o.operator = 1 and o.block = 0 order by o.name, o.lastname ";
                                             $result = sqlsrv_query($conn, $fQuery);
                                             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
                                                 <!-- <option value="<?php echo $row['operator_id']; ?>"><?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description'] . ' | ' . $row['branch']; ?></option>	 -->
-                                                <option value="<?php echo $row['operator_id']; ?>">
+                                                <option name="<?php echo $row['position']; ?>" value="<?php echo $row['operator_id']; ?>">
                                                     <?php echo $row['name'] . "  " . $row['lastname'] . ' | ' . $row['description']; ?>
                                                 </option>
                                             <?php } ?>
@@ -11213,8 +11233,18 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <span>Position</span>
-                                        <input type="text" name="position" id="provisionincome_position"
-                                            class="form-control">
+                                        <select name="position" id="provisionincome_position" class="form-control"
+                                            aria-describedby="inputGroupPrepend2">
+                                            <option value=""></option>
+                                            <?php
+                                            $fQuery = "SELECT * from position";
+                                            $result = sqlsrv_query($conn, $fQuery);
+                                            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) { ?>
+                                                <option value="<?php echo $row['code']; ?>">
+                                                    <?php echo $row['description']; ?>
+                                                </option>
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-2">
@@ -11658,6 +11688,13 @@
                 $('#serviceother_charge_as').val(selectedValue);
             }
         }
+    }
+
+    function changeOperator(id, positionId) {
+        const selectElement = document.getElementById(id);
+        const selected = selectElement.options[selectElement.selectedIndex];
+        const selectedValue = selected.getAttribute('name');
+        $('#' + positionId).val(selectedValue);
     }
 
     function copyJobs(id) { //copy worksheet เดียวกัน
@@ -14926,26 +14963,67 @@
 
     $("#cargo_vehicle").on("change", function () {
         get_vehicle_handling($("#customer").val());
-        get_vehicle2($("#cargo_vehicle").val());
+        get_vehicle2("cargo", $("#cargo_vehicle").val());
 
         //get_vehicle_handling($("#customer").val());
         //$('#cargo_charge_as').val($("#cargo_outsource_charge_as").val());
 
         //get_contract_cargo($("#customer").val(),$("#charge_as2").val(),$("#diesel_rate").val(),$("#cargo_transport_from").val());
     })
+    
+    $("#taxi_vehicle").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("taxi", $("#taxi_vehicle").val());
+    })
+    $("#agencyservice_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("agencyservice", $("#agencyservice_vehicle_id").val());
+    })
+    $("#managementfree_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("managementfree", $("#managementfree_vehicle_id").val());
+    })
+    $("#provisionincome_vehicle_id").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("provisionincome", $("#provisionincome_vehicle_id").val());
+    })
+    $("#rental_vehicle").on("change", function () {
+        // get_vehicle_handling($("#customer").val());
+        get_vehicle2("rental", $("#rental_vehicle").val());
+    })
+    
 
-    async function get_vehicle2(vehicle) {
+
+    async function get_vehicle2(menu, vehicle) {
         $.ajax({
             type: 'GET',
             dataType: "json",
             url: 'api/get_vehicle.php?vehicle_id=' + vehicle,
             success: function (data) {
-                $('#cargo_charge_as').val(data.type);
-                //$("#cargo_charge_as").val('CRANE 40T');
-                $('#cargo_outsource_charge_as').val(data.type);
-                get_contract_cargo($("#customer").val(), data.type, $("#cargo_diesel_rate").val(), $("#cargo_transport_from").val());
-                $('#cargo_department').val(data.department);
-                $('#cargo_cost_center').val(data.cost_center);
+                if(menu == "cargo") {
+                    $('#cargo_charge_as').val(data.type);
+                    //$("#cargo_charge_as").val('CRANE 40T');
+                    $('#cargo_outsource_charge_as').val(data.type);
+                    get_contract_cargo($("#customer").val(), data.type, $("#cargo_diesel_rate").val(), $("#cargo_transport_from").val());
+                    $('#cargo_department').val(data.department);
+                    $('#cargo_cost_center').val(data.cost_center);
+                } else if(menu == "taxi") {
+                    $('#taxi_vehicle_type').val(data.type);
+                    // $('#taxi_charge_as').val(data.type);
+                } else if(menu == "agencyservice") {
+                    $('#agencyservice_vehicle_type').val(data.type);
+                    // $('#agencyservice_charge_as').val(data.type);
+                } else if(menu == "managementfree") {
+                    $('#managementfree_vehicle_type').val(data.type);
+                    // $('#managementfree_charge_as').val(data.type);
+                } else if(menu == "provisionincome") {
+                    $('#provisionincome_vehicle_type').val(data.type);
+                    // $('#provisionincome_charge_as').val(data.type);
+                } else if(menu == "rental") {
+                    $('#rental_vehicle_type').val(data.type);
+                    // $('#rental_charge_as').val(data.type);
+                }
+                
                 //$('#cargo_charge_as').val(data.type);
             }
         });
